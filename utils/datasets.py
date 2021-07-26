@@ -307,7 +307,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 else:
                     raise Exception('%s does not exist' % p)
             img_path = path + '/images'
-            self.img_files = sorted([(img_path + '/' + x).replace('/', os.sep) for x in os.listdir(img_path) if x.split('.')[-1] in img_formats])
+            self.img_files = sorted([(img_path + '/' + x).replace('/', os.sep) for x in os.listdir(img_path)])
                 # [x.replace('/', os.sep) for x in f if os.path.splitext(x)[-1].lower() in img_formats])
             print('path: ' + img_path)
             print(len(os.listdir(img_path)))
