@@ -16,6 +16,7 @@ from torch.cuda import amp
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
+import wandb
 
 import test  # import test.py to get mAP after each epoch
 from models.models import *
@@ -190,6 +191,12 @@ def train(hyp, opt, device, tb_writer=None):
         print('Image sizes %g train, %g test' % (imgsz, imgsz_test))
         print('Using %g dataloader workers' % dataloader.num_workers)
         print('Starting training for %g epochs...' % epochs)
+
+    # init wandb
+    t = time.localtime()
+    name = str(t.tm_mon) + '/' + str(t.tm_mday) + '/' + str(t.tm_hour) + ':' + str(t.tm_min)
+    wandb.init(project='yolov4', name=name)
+    
     # torch.autograd.set_detect_anomaly(True)
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         model.train()
@@ -313,13 +320,19 @@ def train(hyp, opt, device, tb_writer=None):
             if len(opt.name) and opt.bucket:
                 os.system('gsutil cp %s gs://%s/results/results%s.txt' % (results_file, opt.bucket, opt.name))
 
-            # Tensorboard
-            if tb_writer:
-                tags = ['train/giou_loss', 'train/obj_loss', 'train/cls_loss',
-                        'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/mAP_0.5:0.95',
-                        'val/giou_loss', 'val/obj_loss', 'val/cls_loss']
-                for x, tag in zip(list(mloss[:-1]) + list(results), tags):
+            # Tensorboard & wandb
+            wandb_dict = {}
+            
+            tags = ['train/giou_loss', 'train/obj_loss', 'train/cls_loss',
+                    'metrics/precision', 'metrics/recall', 'metrics/mAP_0.5', 'metrics/mAP_0.5:0.95',
+                    'val/giou_loss', 'val/obj_loss', 'val/cls_loss']
+            for x, tag in zip(list(mloss[:-1]) + list(results), tags):
+                wandb_dict[tag] = x
+                
+                if tb_writer:
                     tb_writer.add_scalar(tag, x, epoch)
+    
+            wandb.log(wandb_dict)
 
             # Update best mAP
             fi = fitness(np.array(results).reshape(1, -1))  # fitness_i = weighted combination of [P, R, mAP, F1]
