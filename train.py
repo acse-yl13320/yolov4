@@ -195,7 +195,7 @@ def train(hyp, opt, device, tb_writer=None):
     # init wandb
     t = time.localtime()
     name = str(t.tm_mon) + '/' + str(t.tm_mday) + '/' + str(t.tm_hour) + ':' + str(t.tm_min)
-    wandb.init(project='yolov4', name=name)
+    wandb.init(project='yolov4', name=name, config=hyp)
     
     # torch.autograd.set_detect_anomaly(True)
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
@@ -328,7 +328,7 @@ def train(hyp, opt, device, tb_writer=None):
                     'val/giou_loss', 'val/obj_loss', 'val/cls_loss']
             for x, tag in zip(list(mloss[:-1]) + list(results), tags):
                 wandb_dict[tag] = x
-                
+
                 if tb_writer:
                     tb_writer.add_scalar(tag, x, epoch)
     
