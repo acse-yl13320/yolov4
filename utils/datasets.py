@@ -306,9 +306,11 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     f += glob.iglob(p + os.sep + '*.*')
                 else:
                     raise Exception('%s does not exist' % p)
-            self.img_files = sorted(
+            self.img_files = sorted([(path + '/' + x).replace('/', os.sep) for x in os.listdir(path) if x.split('.')[-1] in img_formats])
                 # [x.replace('/', os.sep) for x in f if os.path.splitext(x)[-1].lower() in img_formats])
-                [(path + '/' + x).replace('/', os.sep) for x in os.listdir(path) if x.split('.')[-1] in img_formats])
+            print('path: ' + path)
+            print(len(os.listdir(path)))
+            
         except Exception as e:
             raise Exception('Error loading data from %s: %s\nSee %s' % (path, e, help_url))
 
